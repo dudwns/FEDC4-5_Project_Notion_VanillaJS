@@ -105,6 +105,7 @@ body {
 
 [contentEditable="true"]:empty::before {
   content: attr(placeholder);
+  color: rgb(117, 117, 117);
 }
 
 .link-container {
