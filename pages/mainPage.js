@@ -15,7 +15,7 @@ import { push } from "../utils/router.js";
 export default function MainPage({ $target }) {
   const $page = document.createElement("div");
   $page.className = "container";
-  const SELECT_TIME = 1000;
+  const SELECT_TIME = 500;
   this.state = {
     documentList: [],
     postId: "new",
@@ -67,7 +67,7 @@ export default function MainPage({ $target }) {
         }
         this.setState({ ...this.state });
         push(`/documents/${clickId}`);
-        this.setState({ ...this.state, postId: clickId });
+        this.setState({ ...this.state, postId: clickId, isLoading: true });
         fetchPost();
       }
     },
@@ -75,6 +75,8 @@ export default function MainPage({ $target }) {
     onAdd: async (clickId) => {
       if (!this.state.isLoading) {
         const postDocument = await createDocument("", clickId);
+        if (this.state.isLoading) return;
+        this.setState({ ...this.state, isLoading: true });
         await fetchDocumentList();
         push(`/documents/${postDocument.id}`);
       }
@@ -83,6 +85,7 @@ export default function MainPage({ $target }) {
     onDelete: async (clickId) => {
       if (!this.state.isLoading) {
         await deleteDocument(clickId);
+        this.setState({ ...this.state, isLoading: true });
         await fetchDocumentList();
         if (this.state.postId === clickId) {
           push("/");
@@ -132,6 +135,8 @@ export default function MainPage({ $target }) {
           const putPost = await updateDocument(this.state.postId, post);
           removeItem(postLocalSaveKey);
           this.setState({ ...this.state, post, selectedDocument: putPost });
+          await fetchDocumentList();
+          documentList.render();
           // await editor.render(); // 저장 되었을 때 리렌더링
         }
       }, SELECT_TIME);
@@ -148,8 +153,6 @@ export default function MainPage({ $target }) {
   }
 
   const fetchDocumentList = async () => {
-    if (this.state.isLoading) return;
-    this.setState({ ...this.state, isLoading: true });
     const newDocumentList = await getAllDocument();
 
     const titleList = getTitleList(newDocumentList);
@@ -164,7 +167,7 @@ export default function MainPage({ $target }) {
 
   const fetchPost = async () => {
     if (this.state.isLoading) return;
-    this.setState({ ...this.state });
+    // this.setState({ ...this.state });
     const { postId } = this.state;
     if (postId !== "new") {
       const post = await getDocument(postId);
@@ -191,10 +194,11 @@ export default function MainPage({ $target }) {
         childTitleList,
         selectedDocument: post,
         isLoading: false,
+        isInit: false,
       });
       removeItem(postLocalSaveKey);
       editor.render();
-      this.setState({ ...this.state, isInit: false });
+      // this.setState({ ...this.state, isInit: false });
     }
   };
 
