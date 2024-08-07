@@ -15,7 +15,7 @@ import { push } from "../utils/router.js";
 export default function MainPage({ $target }) {
   const $page = document.createElement("div");
   $page.className = "container";
-  const SELECT_TIME = 2000;
+  const SELECT_TIME = 1000;
   this.state = {
     documentList: [],
     postId: "new",
@@ -27,10 +27,12 @@ export default function MainPage({ $target }) {
     childTitleList: [],
     isEditor: false,
     selectedDocument: "",
+    isLoading: false,
+    isInit: true,
   };
 
   this.init = async (id) => {
-    this.setState({ ...this.state, isEditor: id, postId: id || "new" });
+    this.setState({ ...this.state, isEditor: id, postId: id || "new", isInit: true });
     await fetchDocumentList();
     await fetchPost();
   };
@@ -48,7 +50,8 @@ export default function MainPage({ $target }) {
       titleList: this.state.titleList,
       childTitleList: this.state.childTitleList,
     });
-    this.render();
+    toggleSpinner(this.state.isLoading);
+    if (this.state.isInit) this.render(); // 처음일 때만 전체를 렌더링
   };
 
   let postLocalSaveKey = `temp-post-${this.state.postId}`;
@@ -58,22 +61,32 @@ export default function MainPage({ $target }) {
     initialState: this.state.documentList,
 
     onClick: async (clickId) => {
-      push(`/documents/${clickId}`);
-      this.setState({ ...this.state, postId: clickId });
-      fetchPost();
+      if (!this.state.isLoading) {
+        if (timer !== null) {
+          clearTimeout(timer);
+        }
+        this.setState({ ...this.state });
+        push(`/documents/${clickId}`);
+        this.setState({ ...this.state, postId: clickId });
+        fetchPost();
+      }
     },
 
     onAdd: async (clickId) => {
-      const postDocument = await createDocument("", clickId);
-      await fetchDocumentList();
-      push(`/documents/${postDocument.id}`);
+      if (!this.state.isLoading) {
+        const postDocument = await createDocument("", clickId);
+        await fetchDocumentList();
+        push(`/documents/${postDocument.id}`);
+      }
     },
 
     onDelete: async (clickId) => {
-      await deleteDocument(clickId);
-      await fetchDocumentList();
-      if (this.state.postId === clickId) {
-        push("/");
+      if (!this.state.isLoading) {
+        await deleteDocument(clickId);
+        await fetchDocumentList();
+        if (this.state.postId === clickId) {
+          push("/");
+        }
       }
     },
   });
@@ -119,13 +132,24 @@ export default function MainPage({ $target }) {
           const putPost = await updateDocument(this.state.postId, post);
           removeItem(postLocalSaveKey);
           this.setState({ ...this.state, post, selectedDocument: putPost });
-          editor.render();
+          // await editor.render(); // 저장 되었을 때 리렌더링
         }
       }, SELECT_TIME);
     },
   });
 
+  function toggleSpinner(isLoading) {
+    const spinner = document.querySelector(".spinner");
+    if (isLoading) {
+      spinner.classList.add("visible");
+    } else {
+      spinner.classList.remove("visible");
+    }
+  }
+
   const fetchDocumentList = async () => {
+    if (this.state.isLoading) return;
+    this.setState({ ...this.state, isLoading: true });
     const newDocumentList = await getAllDocument();
 
     const titleList = getTitleList(newDocumentList);
@@ -134,16 +158,17 @@ export default function MainPage({ $target }) {
       ...this.state,
       documentList: newDocumentList,
       titleList,
+      isLoading: false,
     });
   };
 
   const fetchPost = async () => {
+    if (this.state.isLoading) return;
+    this.setState({ ...this.state });
     const { postId } = this.state;
-
     if (postId !== "new") {
       const post = await getDocument(postId);
       const childTitleList = getChildTitleList(post);
-
       const tempPost = getItem(postLocalSaveKey, {
         title: "",
         content: "",
@@ -153,15 +178,23 @@ export default function MainPage({ $target }) {
           this.setState({
             ...this.state,
             post: tempPost,
+            isLoading: false,
           });
           removeItem(postLocalSaveKey);
           editor.render();
           return;
         }
       }
-      this.setState({ ...this.state, post, childTitleList, selectedDocument: post });
+      this.setState({
+        ...this.state,
+        post,
+        childTitleList,
+        selectedDocument: post,
+        isLoading: false,
+      });
       removeItem(postLocalSaveKey);
       editor.render();
+      this.setState({ ...this.state, isInit: false });
     }
   };
 
