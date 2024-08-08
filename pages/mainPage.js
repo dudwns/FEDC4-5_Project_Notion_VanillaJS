@@ -11,6 +11,7 @@ import {
 import getChildTitleList from "../utils/getChildTitleList.js";
 import getTitleList from "../utils/getTitleList.js";
 import { push } from "../utils/router.js";
+import DefaultScreen from "../components/DefaultScreen.js";
 
 export default function MainPage({ $target }) {
   const $page = document.createElement("div");
@@ -49,6 +50,9 @@ export default function MainPage({ $target }) {
       isEditor: this.state.isEditor,
       titleList: this.state.titleList,
       childTitleList: this.state.childTitleList,
+    });
+    defaultscreen.setState({
+      isEditor: this.state.isEditor,
     });
     toggleSpinner(this.state.isLoading);
     if (this.state.isInit) this.render(); // 처음일 때만 전체를 렌더링
@@ -95,7 +99,8 @@ export default function MainPage({ $target }) {
   });
 
   let timer = null;
-
+  const defaultscreen = new DefaultScreen({ $target: $page });
+  defaultscreen.render();
   const editor = new Editor({
     $target: $page,
     initialState: {
