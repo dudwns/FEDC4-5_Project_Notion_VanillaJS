@@ -1,19 +1,21 @@
 export default function markdownChange(richContent, state) {
   if (state.content) {
-    richContent = state.content.replace(/<div>/g, "<br>").replace(/<\/div>/g, "");
+    richContent = state.content;
   }
 
   return richContent
-    .split("<br>")
+    .split("<div>")
     .map((line) => {
+      line = line.replace(/<\/div>/g, "");
+      console.log(line);
       if (line.indexOf("# ") === 0) {
-        return `<h1>${line.substr(2)}</h1>`;
+        return line.replace(/^# (.*$)/gim, "<h1>$1</h1>");
       } else if (line.indexOf("## ") === 0) {
-        return `<h2>${line.substr(3)}</h2>`;
+        return line.replace(/^## (.*$)/gim, "<h2>$1</h2>");
       } else if (line.indexOf("### ") === 0) {
-        return `<h3>${line.substr(4)}</h3>`;
+        return line.replace(/^### (.*$)/gim, "<h3>$1</h3>");
       } else if (line.indexOf("- ") === 0) {
-        return `<li>${line.substr(2)}</li>`;
+        return line.replace(/^- (.*)$/gim, "<ul><li>$1</li>");
       } else {
         if (state.titleList) {
           for (const titleItem of state.titleList) {
@@ -27,7 +29,8 @@ export default function markdownChange(richContent, state) {
           }
         }
       }
+
       return line;
     })
-    .join("<br>");
+    .join("<div>");
 }
