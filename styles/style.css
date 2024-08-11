@@ -119,6 +119,10 @@ body {
   flex-grow: 1;
   font-size: 0.9rem;
   padding-top: 50px;
+
+  ul {
+    padding-left: 18px;
+  }
 }
 
 [contentEditable="true"]:empty::before {
