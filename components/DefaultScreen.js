@@ -7,7 +7,6 @@ export default function DefaultScreen({ $target }) {
 
   this.setState = (nextState) => {
     this.state = nextState;
-    console.log(this.state);
     $defaultScreen.className = this.state.isEditor ? "none" : "defaultScreen";
     this.render();
   };
