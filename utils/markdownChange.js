@@ -7,7 +7,6 @@ export default function markdownChange(richContent, state) {
     .split("<div>")
     .map((line) => {
       line = line.replace(/<\/div>/g, "");
-      console.log(line);
       if (line.indexOf("# ") === 0) {
         return line.replace(/^# (.*$)/gim, "<h1>$1</h1>");
       } else if (line.indexOf("## ") === 0) {
