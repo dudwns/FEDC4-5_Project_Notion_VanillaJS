@@ -1,6 +1,6 @@
 import DocumentList from "../components/DocumentList.js";
 import Editor from "../components/Editor.js";
-import { setItem, getItem, removeItem } from "../utils/storage.js";
+import { removeItem } from "../utils/storage.js";
 import {
   createDocument,
   deleteDocument,
@@ -16,7 +16,7 @@ import DefaultScreen from "../components/DefaultScreen.js";
 export default function MainPage({ $target }) {
   const $page = document.createElement("div");
   $page.className = "container";
-  const SELECT_TIME = 500;
+  const SELECT_TIME = 0;
   this.state = {
     documentList: [],
     postId: "new",
@@ -98,6 +98,19 @@ export default function MainPage({ $target }) {
     },
   });
 
+  const fetchDocumentList = async () => {
+    const newDocumentList = await getAllDocument();
+
+    const titleList = getTitleList(newDocumentList);
+
+    this.setState({
+      ...this.state,
+      documentList: newDocumentList,
+      titleList,
+      isLoading: false,
+    });
+  };
+
   let timer = null;
   const defaultscreen = new DefaultScreen({ $target: $page });
   defaultscreen.render();
@@ -117,39 +130,19 @@ export default function MainPage({ $target }) {
       }
 
       timer = setTimeout(async () => {
-        setItem(postLocalSaveKey, {
-          ...post,
-          tempSaveDate: new Date(),
-        });
-
-        const isNew = this.state.postId === "new";
-        if (isNew) {
-          const createPost = await request("/", {
-            method: "POST",
-            body: JSON.stringify(post),
-          });
-
-          history.replaceState(null, null, `/documents/${createPost.id}`);
-          removeItem(postLocalSaveKey);
-
-          this.setState({
-            ...this.state,
-            postId: createPost.id,
-          });
-        } else {
+        {
           const putPost = await updateDocument(this.state.postId, post);
-          removeItem(postLocalSaveKey);
           this.setState({ ...this.state, post, selectedDocument: putPost });
-          await fetchDocumentList();
+          editor.render();
+          fetchDocumentList();
           documentList.render();
-          // await editor.render(); // 저장 되었을 때 리렌더링
         }
       }, SELECT_TIME);
     },
   });
 
   function toggleSpinner(isLoading) {
-    const spinner = document.querySelector(".spinner");
+    const spinner = document.querySelector(".loading");
     if (isLoading) {
       spinner.classList.add("visible");
     } else {
@@ -157,42 +150,12 @@ export default function MainPage({ $target }) {
     }
   }
 
-  const fetchDocumentList = async () => {
-    const newDocumentList = await getAllDocument();
-
-    const titleList = getTitleList(newDocumentList);
-
-    this.setState({
-      ...this.state,
-      documentList: newDocumentList,
-      titleList,
-      isLoading: false,
-    });
-  };
-
   const fetchPost = async () => {
     if (this.state.isLoading) return;
-    // this.setState({ ...this.state });
     const { postId } = this.state;
     if (postId !== "new") {
       const post = await getDocument(postId);
       const childTitleList = getChildTitleList(post);
-      const tempPost = getItem(postLocalSaveKey, {
-        title: "",
-        content: "",
-      });
-      if (tempPost.tempSaveDate && tempPost.tempSaveDate > post.updateAt) {
-        if (confirm("저장되지 않은 임시 데이터가 있습니다. 불러올까요?")) {
-          this.setState({
-            ...this.state,
-            post: tempPost,
-            isLoading: false,
-          });
-          removeItem(postLocalSaveKey);
-          editor.render();
-          return;
-        }
-      }
       this.setState({
         ...this.state,
         post,
@@ -201,9 +164,7 @@ export default function MainPage({ $target }) {
         isLoading: false,
         isInit: false,
       });
-      removeItem(postLocalSaveKey);
       editor.render();
-      // this.setState({ ...this.state, isInit: false });
     }
   };
 
