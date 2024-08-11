@@ -26,7 +26,6 @@ export default function Editor({ $target, initialState, onEditing }) {
   this.render = () => {
     let richContent = "";
     let htmlText = markdownChange(richContent, this.state);
-
     if (this.state.childTitleList) {
       let navigatorText = "";
       navigatorText = navigator(navigatorText, this.state);
@@ -36,25 +35,32 @@ export default function Editor({ $target, initialState, onEditing }) {
       }
     }
 
-    $editor.querySelector("[name=title]").value = this.state.title;
-    $editor.querySelector("[name=content]").innerHTML = htmlText;
-
+    const $titleInput = $editor.querySelector("[name=title]");
     const $contentInput = $editor.querySelector("[name=content]");
 
-    $editor.querySelector("[name=title]").addEventListener("keyup", (e) => {
-      const nextState = { ...this.state, title: e.target.value };
-      this.setState(nextState);
-      onEditing(this.state);
+    $titleInput.value = this.state.title;
+    $contentInput.innerHTML = htmlText;
+
+    $titleInput.addEventListener("keydown", (e) => {
+      handleKeyDown(e);
     });
 
-    $editor.querySelector("[name=content]").addEventListener("input", (e) => {
-      const nextState = {
-        ...this.state,
-        content: e.target.innerHTML,
-      };
-      this.setState(nextState);
-      onEditing(this.state);
+    $contentInput.addEventListener("keydown", (e) => {
+      handleKeyDown(e);
     });
+
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        const nextState = {
+          ...this.state,
+          title: $titleInput.value,
+          content: $contentInput.innerHTML,
+        };
+        this.setState(nextState);
+        onEditing(this.state);
+      }
+    };
 
     if (this.state.content) {
       $editor.addEventListener("click", (e) => {
@@ -73,7 +79,7 @@ export default function Editor({ $target, initialState, onEditing }) {
       range.collapse(false);
       selection.removeAllRanges();
       selection.addRange(range);
-    };
+    }; // 커서를 에디터 끝으로 이동하는 함수
     moveCursorToEnd($contentInput);
   };
 
