@@ -99,17 +99,57 @@ body {
   outline: none;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 20px;
   flex-grow: 1;
-  padding-top: 50px;
+  padding-top: 100px;
+  align-items: center;
 }
 .greetings {
-  font-size: 30px;
+  font-size: 24px;
+  margin-bottom: 70px;
 }
 
-.description {
-  font-size: 20px;
+.usage-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.usage {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding-left: 30px;
+
+  ul {
+    margin: 0;
+    padding: 0;
+    padding-left: 14px;
+  }
+}
+
+.window {
+  margin-bottom: 4px;
+}
+
+.bold {
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.usage-ul {
+  padding-left: 30px;
+  padding-bottom: 10px;
+}
+
+.strong {
+  color: skyblue;
+  border: 1px solid skyblue;
+  padding: 2px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .editor {
